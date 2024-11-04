@@ -8,6 +8,11 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+    alicloud:
+      access-key: LTAI5tHgzE3a4mT7vsGUpjDt
+      secret-key: xgsFxxytT8anhPW4n5rOW8CLlCHIoo
+      oss:
+        endpoint: oss-cn-beijing.aliyuncs.com
   application:
     name: gulimall-product
 
@@ -25,3 +30,8 @@ server:
 logging:
   level:
     com.atguigu.gulimall: debug
+
+
+#alibaba.cloud.access-key=your-ak
+#alibaba.cloud.secret-key=your-sk
+#alibaba.cloud.oss.endpoint=***

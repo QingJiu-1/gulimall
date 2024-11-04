@@ -68,12 +68,24 @@ public class CategoryController {
     }
 
     /**
-     * 修改
+     * 批量修改
+     * 拖拽功能后重新排序，对层级进行修改，通过请求体中获取到数据
+     */
+    @RequestMapping("/update/sort")
+    //@RequiresPermissions("product:category:update")
+    public R updateSort(@RequestBody CategoryEntity[] category){
+        //mybatis-plus自带有批量修改，但其对象是集合对象需要将数组对象转为集合对象
+        categoryService.updateBatchById(Arrays.asList(category));
+        return R.ok();
+    }
+
+    /**
+     * 批量修改
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:category:update")
     public R update(@RequestBody CategoryEntity category){
-		categoryService.updateById(category);
+        categoryService.updateById(category);
 
         return R.ok();
     }
