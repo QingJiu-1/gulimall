@@ -12,6 +12,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  *  只标注校验规则，不在控制层，开启校验规则也是不起作用 ;开启校验@Valid:
  * 	    效果：校验错误会有默认的响应：
  *  给校验的bean后紧跟一个BindingResult,就可以获取到校验结果
+ *
+ * 统一的异常处理
+ *  使用springMVC提供的 @ControllerAdvice
+ *      抽取异常处理类
  */
 @MapperScan("com.atguigu.gulimall.product.dao")
 @EnableDiscoveryClient
