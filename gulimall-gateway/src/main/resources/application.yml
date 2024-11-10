@@ -39,6 +39,8 @@ spring:
 
 
 
+
+
   ##前端项目,/api
   ##但是访问还是出错的原因是http://localhost:88/api/captcha.jpg ===> http://renren-fast:88/api/captcha.jpg 可以使用网关自带的路径重写来改正访问路径
 

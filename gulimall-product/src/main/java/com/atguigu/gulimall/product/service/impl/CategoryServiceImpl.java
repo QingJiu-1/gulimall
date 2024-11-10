@@ -1,8 +1,11 @@
 package com.atguigu.gulimall.product.service.impl;
 
+import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,6 +20,7 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("categoryService")
@@ -27,6 +31,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      * CategoryDao categoryDao;
      */
 
+    @Autowired
+    CategoryBrandRelationService categoryBrandRelationService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -72,6 +78,51 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         //TODO 1、检查当前删除的菜单，是不是被别的地方引用
         //批量直接删除删除
         baseMapper.deleteBatchIds(asList);
+    }
+
+    /**
+     * 找到catelogId的完整路径
+     * [父/子/孙]
+     * @param catelogId
+     * @return
+     */
+    @Override
+    public Long[] findCatelogPath(Long catelogId) {
+        List<Long> paths = new ArrayList<>();
+        List<Long> parentPath = findParentPath(catelogId, paths);
+        //Collections用于反转指定列表的元素顺序;
+        //reverse是原地操作方法，不会返回新的 List，它直接改变传入的 List 对象的顺序
+        Collections.reverse(parentPath);
+
+        return parentPath.toArray(new Long[parentPath.size()]);
+    }
+
+    /**
+     * 级联更新所有关联数据
+     * @param category
+     */
+    @Transactional
+    @Override
+    public void updateCascade(CategoryEntity category) {
+        boolean b = this.updateById(category);
+
+        //要更新关联表需要建关联注入
+        categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
+
+
+    }
+
+    private List<Long> findParentPath(Long catelogId,List<Long> paths){
+
+        //收集当前信息id
+        paths.add(catelogId);
+        //查出当前分类的信息
+        CategoryEntity byId = this.getById(catelogId);
+        //如果它有父分类找到其父分类
+        if(byId.getParentCid() != 0){
+            findParentPath(byId.getParentCid(),paths);
+        }
+        return paths;
     }
 
 

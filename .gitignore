@@ -20,3 +20,6 @@ buildNumber.properties
 
 **/.gitignore
 
+gulimall-third-party/src/main/resources/application.yml
+gulimall-product/src/main/resources/application.yml
+
