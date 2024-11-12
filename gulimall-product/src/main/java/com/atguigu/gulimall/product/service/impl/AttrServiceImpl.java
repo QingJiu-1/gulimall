@@ -7,8 +7,10 @@ import com.atguigu.gulimall.product.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gulimall.product.entity.AttrGroupEntity;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.AttrGroupService;
+import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrRespVo;
 import com.atguigu.gulimall.product.vo.AttrVo;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,10 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
      */
     @Autowired
     CategoryDao categoryDao;
+
+
+    @Autowired
+    CategoryService categoryService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -144,6 +150,66 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         pageUtils.setList(respVos);
 
         return pageUtils;
+    }
+
+    @Override
+    public AttrRespVo getAttrInfo(Long attrId) {
+        AttrRespVo respVo = new AttrRespVo();
+        //更具attrId查询出AttrEntity的信息
+        AttrEntity attrEntity = this.getById(attrId);
+        //将AttrEntity中的信息拷贝到attrRespVo中
+        BeanUtils.copyProperties(attrEntity,respVo);
+
+        //出来AttrEntity中的基本信息还要补齐其他信息
+        /**
+         * 设置分组信息
+         */
+        AttrAttrgroupRelationEntity attrAttrgroupRelation = relationDao.selectOne(
+                new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrId)
+        );
+        if(attrAttrgroupRelation != null){
+            respVo.setAttrGroupId(attrAttrgroupRelation.getAttrId());
+            AttrGroupEntity attrGroupEntity = attrGroupDao.selectById(attrAttrgroupRelation.getAttrGroupId());
+            if (attrGroupEntity != null){
+                respVo.setGroupName(attrGroupEntity.getAttrGroupName());
+            }
+        }
+
+        /**
+         * 设置分类信息
+         */
+        Long catelogId = attrEntity.getCatelogId(); //当前类中有分类id但不完整
+        Long[] catelogPath = categoryService.findCatelogPath(catelogId); //注入分类实现类，通过catelogId查询出完整路径
+        respVo.setCatelogPath(catelogPath); //写入完整路径
+
+        CategoryEntity categoryEntity = categoryDao.selectById(catelogId); //通过对id：catelogId查询出全部的categoryEntity
+        if(categoryEntity != null){
+            respVo.setCatelogName(categoryEntity.getName()); //写入分类名
+        }
+
+
+        return respVo;
+    }
+
+    @Transactional
+    @Override
+    public void updateAttr(AttrVo attr) {
+        //先对基本数据进行更新
+        AttrEntity attrEntity = new AttrEntity();
+        BeanUtils.copyProperties(attr,attrEntity);
+        this.updateById(attrEntity);
+        //1、修改分组关联
+        AttrAttrgroupRelationEntity relationEntity = new AttrAttrgroupRelationEntity();
+        relationEntity.setAttrGroupId(attr.getAttrGroupId());
+        relationEntity.setAttrId(attr.getAttrId());
+
+        Integer count = relationDao.selectCount(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attr.getAttrId()));
+        if (count > 0){
+            relationDao.update(relationEntity,new UpdateWrapper<AttrAttrgroupRelationEntity>().eq("attr_id",attr.getAttrId()));
+        }else {
+            relationDao.insert(relationEntity);
+        }
+
     }
 
 }
