@@ -43,6 +43,8 @@ public class AttrVo {
      */
     private Integer showDesc;
 
+    private Long valueType;
+
     private Long attrGroupId;
 
 }

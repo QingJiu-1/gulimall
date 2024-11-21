@@ -6,9 +6,11 @@ import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
 import com.atguigu.gulimall.product.entity.AttrEntity;
+import com.atguigu.gulimall.product.service.AttrAttrgroupRelationService;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
+import com.atguigu.gulimall.product.vo.AttrGroupWithAttrsVo;
 import com.atguigu.gulimall.product.vo.AttrVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -39,13 +41,58 @@ public class AttrGroupController {
     @Autowired
     private AttrService attrService;
 
+    @Autowired
+    private AttrAttrgroupRelationService relationService;
+
     /*http://localhost:88/api/product/attrgroup/1/attr/relation*/
+
+    /**
+     * 新增关联关系
+     * attr/relation
+     */
+    @PostMapping("/attr/relation")
+    public R addRelation(@RequestBody List<AttrGroupRelationVo> vos){
+        relationService.saveBatch(vos);
+        return R.ok();
+
+    }
+
+    ///product/attrgroup/${this.spu.catalogId}/withattr
+    @GetMapping("/{catalogId}/withattr")
+    public R getAttrGroupWithAttrs(@PathVariable("catalogId") Long catalogId){
+
+        //1、查出当前分类下的所有属性分组
+        List<AttrGroupWithAttrsVo> vos = attrGroupService.getAttrGroupWithAttresByCatelogId(catalogId);
+        //2、查出每个属性分组的所有属性
+        return R.ok().put("data",vos);
+    }
+
+
+    /**
+     * 查询分组关联的属性
+     * @param attrgroupId
+     * @return
+     */
     @GetMapping("/{attrgroupId}/attr/relation")
     public R attrRelation(@PathVariable("attrgroupId") Long attrgroupId){
         //需要查询到属性，则导入attr
         List<AttrEntity> entities = attrService.getRelationAttr(attrgroupId);//通过这个方法可以获取到当前分组关联的所有属性
         return R.ok().put("data",entities);
     }
+
+    /**
+     * 查询分组没有关联的属性 attrgroupId/noattr/relation
+     */
+    @GetMapping("/{attrgroupId}/noattr/relation")
+    public R attrNoRelation(@PathVariable("attrgroupId") Long attrgroupId,
+                            @RequestParam Map<String,Object> params){
+        //需要查询到属性，则导入attr
+        PageUtils page = attrService.geNotRelationAttr(params,attrgroupId);//通过这个方法可以获取到当前分组没有关联的所有的分页数据
+        return R.ok().put("page",page);
+    }
+
+
+
 
     /**
      * 列表
